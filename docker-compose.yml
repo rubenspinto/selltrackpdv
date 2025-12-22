@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: selltrackpdv-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-selltrack}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-selltrack123}
+      POSTGRES_DB: ${POSTGRES_DB:-selltrackpdv}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
