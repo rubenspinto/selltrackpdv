@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Storefront } from "@phosphor-icons/react";
+import { toast } from "react-toastify";
 import { Input } from "@/components/ui/Input";
 import { FormButton } from "@/components/ui/FormButton";
 import { registerSchema } from "@/lib/validations/user";
@@ -20,7 +21,6 @@ interface FormErrors {
   email?: string;
   password?: string;
   confirmPassword?: string;
-  _form?: string;
 }
 
 export default function CadastroPage() {
@@ -34,7 +34,6 @@ export default function CadastroPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
 
   const validateField = (name: keyof FormData, value: string) => {
     const dataToValidate = { ...formData, [name]: value };
@@ -71,7 +70,6 @@ export default function CadastroPage() {
     e.preventDefault();
     setIsLoading(true);
     setErrors({});
-    setSuccessMessage("");
 
     // Client-side validation
     const result = registerSchema.safeParse(formData);
@@ -83,6 +81,7 @@ export default function CadastroPage() {
         password: fieldErrors.password?.[0],
         confirmPassword: fieldErrors.confirmPassword?.[0],
       });
+      toast.error("Por favor, corrija os erros no formulário.");
       setIsLoading(false);
       return;
     }
@@ -105,21 +104,22 @@ export default function CadastroPage() {
             email: data.errors.email?.[0],
             password: data.errors.password?.[0],
             confirmPassword: data.errors.confirmPassword?.[0],
-            _form: data.errors._form?.[0],
           });
+          const formError = data.errors._form?.[0];
+          toast.error(formError || "Erro ao realizar cadastro. Verifique os dados.");
         }
         setIsLoading(false);
         return;
       }
 
-      setSuccessMessage("Cadastro realizado com sucesso! Redirecionando...");
+      toast.success("Cadastro realizado com sucesso! Redirecionando...");
       
       // Redirect to login after 2 seconds
       setTimeout(() => {
         router.push("/login");
       }, 2000);
     } catch {
-      setErrors({ _form: "Erro de conexão. Tente novamente." });
+      toast.error("Erro de conexão. Tente novamente.");
       setIsLoading(false);
     }
   };
@@ -159,22 +159,6 @@ export default function CadastroPage() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Success Message */}
-          {successMessage && (
-            <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
-              <p className="text-emerald-400 text-center font-medium">
-                {successMessage}
-              </p>
-            </div>
-          )}
-
-          {/* Error Message */}
-          {errors._form && (
-            <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-              <p className="text-red-400 text-center">{errors._form}</p>
-            </div>
-          )}
-
           <Input
             id="name"
             name="name"

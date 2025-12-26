@@ -2,7 +2,7 @@
 
 **Versão:** 1.0  
 **Data:** 21/12/2025  
-**Status:** Aguardando Aprovação
+**Status:** Aprovado
 
 ---
 
