@@ -22,35 +22,22 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
+      const { signIn } = await import("next-auth/react");
+      
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 400 || response.status === 401) {
-          toast.error(data.error || "Email ou senha inválidos");
-        } else {
-          toast.error("Erro ao realizar login. Tente novamente.");
-        }
+      if (result?.error) {
+        toast.error("Email ou senha inválidos");
         setIsLoading(false);
         return;
       }
 
       toast.success("Login realizado com sucesso!");
-
-      // Redirect to PDV after 500ms
-      setTimeout(() => {
-        router.push("/pdv");
-      }, 500);
+      router.push("/pdv");
     } catch {
       toast.error("Erro de conexão. Tente novamente.");
       setIsLoading(false);

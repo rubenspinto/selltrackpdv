@@ -14,22 +14,9 @@ export default function PdvPage() {
     setIsLoggingOut(true);
 
     try {
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-      });
-
-      if (!response.ok) {
-        toast.error("Erro ao realizar logout. Tente novamente.");
-        setIsLoggingOut(false);
-        return;
-      }
-
+      const { signOut } = await import("next-auth/react");
+      await signOut({ redirect: true, callbackUrl: "/login" });
       toast.success("Logout realizado com sucesso!");
-
-      // Redirect to login after 1 second
-      setTimeout(() => {
-        router.push("/login");
-      }, 1000);
     } catch {
       toast.error("Erro de conexão. Tente novamente.");
       setIsLoggingOut(false);

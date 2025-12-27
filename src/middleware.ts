@@ -1,52 +1,33 @@
-import { NextRequest, NextResponse } from "next/server";
-import { verifySession } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { auth } from "@/lib/auth.config";
 
-// Define public routes that don't require authentication
-const publicRoutes = ["/", "/login", "/cadastro"];
+export default auth((req) => {
+  const isLoggedIn = !!req.auth;
+  const { pathname } = req.nextUrl;
 
-// Define routes that only authenticated users can access
-const protectedRoutes = ["/pdv"];
+  // Rotas públicas
+  const isPublicRoute = ["/", "/login", "/cadastro"].includes(pathname);
 
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  // Rotas protegidas
+  const isProtectedRoute =
+    pathname.startsWith("/pdv") || pathname.startsWith("/dashboard");
 
-  // Check if the route is an API route for authentication
-  if (pathname.startsWith("/api/auth")) {
-    return NextResponse.next();
+  // Usuário logado tentando acessar login/cadastro → /pdv
+  if (isLoggedIn && (pathname === "/login" || pathname === "/cadastro")) {
+    return NextResponse.redirect(new URL("/pdv", req.url));
   }
 
-  // Get session from cookie
-  const sessionCookie = request.cookies.get("session");
-  const session = sessionCookie
-    ? await verifySession(sessionCookie.value)
-    : null;
-
-  // Check if user is trying to access a protected route without authentication
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
-
-  if (isProtectedRoute && !session) {
-    // Redirect to login if trying to access protected route without session
-    const loginUrl = new URL("/login", request.url);
+  // Usuário não logado tentando acessar rota protegida → /login
+  if (!isLoggedIn && isProtectedRoute) {
+    const loginUrl = new URL("/login", req.url);
+    loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Check if authenticated user is trying to access login page
-  if (pathname === "/login" && session) {
-    // Redirect to PDV if already authenticated
-    const pdvUrl = new URL("/pdv", request.url);
-    return NextResponse.redirect(pdvUrl);
-  }
-
   return NextResponse.next();
-}
+});
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for static files and images
-     */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

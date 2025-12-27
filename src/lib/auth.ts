@@ -1,91 +1,42 @@
-import { SignJWT, jwtVerify } from "jose";
-import { cookies } from "next/headers";
+import NextAuth from "next-auth";
+import { authConfig } from "./auth.config";
+import Credentials from "next-auth/providers/credentials";
+import { prisma } from "@/lib/prisma";
+import argon2 from "argon2";
+import { loginSchema } from "@/lib/validations/user";
 
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
-);
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
+  providers: [
+    Credentials({
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        // Validar
+        const parsed = loginSchema.safeParse(credentials);
+        if (!parsed.success) return null;
 
-const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
+        const { email, password } = parsed.data;
 
-export interface SessionPayload {
-  userId: number;
-  email: string;
-  expiresAt: Date;
-}
+        // Buscar usuário
+        const user = await prisma.user.findUnique({
+          where: { email: email.toLowerCase() },
+        });
 
-/**
- * Gera um JWT com o payload fornecido
- */
-export async function signSession(payload: {
-  userId: number;
-  email: string;
-}): Promise<string> {
-  const expiresAt = new Date(Date.now() + SESSION_DURATION);
+        if (!user) return null;
 
-  const token = await new SignJWT({
-    ...payload,
-    expiresAt: expiresAt.toISOString(),
-  })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime("7d")
-    .sign(secret);
+        // Verificar senha
+        const isValid = await argon2.verify(user.password, password);
+        if (!isValid) return null;
 
-  return token;
-}
-
-/**
- * Verifica e decodifica um JWT
- */
-export async function verifySession(
-  token: string
-): Promise<SessionPayload | null> {
-  try {
-    const { payload } = await jwtVerify(token, secret);
-    return {
-      userId: payload.userId as number,
-      email: payload.email as string,
-      expiresAt: new Date(payload.expiresAt as string),
-    };
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Cria uma sessão definindo o cookie
- */
-export async function createSession(userId: number, email: string) {
-  const token = await signSession({ userId, email });
-  const cookieStore = await cookies();
-
-  cookieStore.set("session", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: SESSION_DURATION / 1000, // Convert to seconds
-    path: "/",
-  });
-}
-
-/**
- * Remove a sessão deletando o cookie
- */
-export async function deleteSession() {
-  const cookieStore = await cookies();
-  cookieStore.delete("session");
-}
-
-/**
- * Recupera a sessão atual do cookie
- */
-export async function getSession(): Promise<SessionPayload | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("session")?.value;
-
-  if (!token) {
-    return null;
-  }
-
-  return await verifySession(token);
-}
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        };
+      },
+    }),
+  ],
+});
