@@ -1,0 +1,198 @@
+# 📐 Plano de Ação: Desenvolvimento do Layout (Frontend)
+
+**Referência:** `docs/plans/005-layout-mestre`
+**Data:** 03/01/2026
+**Status:** Planejado (Com Wireframes)
+
+Este documento define a estratégia visual e funcional para o desenvolvimento do frontend do SellTrack PDV, focado em alta densidade de informações (desktop-first) e agilidade operacional.
+
+---
+
+## 1. 🎨 Diretrizes Globais de UX/UI
+
+### 1.1. Filosofia "Notebook-First"
+O sistema será operado primariamente em notebooks. O layout deve privilegiar a densidade de informação sobre o "respiro" (whitespace).
+- **Densidade:** `Compact` por padrão. Tabelas e listas com padding reduzido.
+- **Scroll:** Evitar scroll na tela de PDV. Scroll permitido em Relatórios e Listagens.
+- **Responsividade:** Secundária. O layout não deve quebrar em telas menores, mas não é otimizado para mobile (celular) nesta fase.
+
+### 1.2. Feedback do Sistema (Regra de Ouro)
+Como o sistema é online (MVP), o usuário precisa sentir que o sistema está respondendo.
+- **Loading Global:** Barra de progresso `NProgress` ou similar no topo da janela para trocas de rota.
+- **Loading Local:** Todo `Button` deve entrar em estado `loading` (spinner + disabled) imediatemente após o clique até a resposta do servidor.
+- **Toasts:** Notificações flutuantes para Sucesso (Verde), Erro (Vermelho) e Alerta (Amarelo).
+
+### 1.3. Widget de Conexão (Semáforo)
+Componente onipresente no Header.
+- **🟢 Online:** Ícone verde discreto ou invisível (apenas tooltip).
+- **🔴 Offline/Instável:** Ícone vermelho/amarelo pulsante com texto explicativo "Tentando reconectar...". Bloqueia ações críticas (ex: Finalizar Venda).
+
+---
+
+## 2. 🏗️ Estrutura do Layout Mestre (App Shell)
+
+O App Shell é o esqueleto que sustenta todas as páginas.
+
+### 2.1. Sidebar (Menu Lateral)
+- **Comportamento:** Retrátil (Collapsible). O usuário pode recolher para ganhar largura de tela.
+- **Estados:**
+    - *Expandido (Default):* Ícone + Texto. Largura ~240px.
+    - *Recolhido:* Apenas Ícones (Tooltip no hover). Largura ~64px.
+- **Itens de Menu:**
+    1.  **Dashboard** (Home)
+    2.  **PDV** (Destaque visual, talvez um botão separado ou cor diferente)
+    3.  **Produtos** (Inventário)
+    4.  **Relatórios**
+    5.  **Configurações** (Usuários, Perfil)
+
+### 2.2. Header (Topo)
+- **Altura:** Compacta (~60px).
+- **Esquerda:** **Breadcrumbs** automático (ex: Produtos > Editar > Camisa Polo).
+- **Centro:** **Widget de Conexão**.
+- **Direita:** Avatar/Menu do Usuário + Botão de Logout.
+
+### 2.3. Área de Conteúdo
+- **Container Padrão:** Padding interno de `16px` ou `24px` para páginas administrativas (Produtos, Relatórios).
+- **Container Full:** Padding `0` para a página de PDV (aproveitamento total).
+
+---
+
+## 3. 📦 Módulo de Produtos: Visualização Hierárquica
+
+Desafio: Exibir Produtos Pai (ex: Camiseta) e suas Variações (ex: P/M/G, Vermelho/Azul) sem poluir a tela.
+
+### 3.1. Solução: Tabela "Master-Detail" com Accordion
+Uma tabela principal lista os Produtos Pais.
+
+| Ícone | Nome | Categoria | Variações | Estoque Total | Preço (Range) | Ações |
+|:---:|:---|:---|:---:|:---:|:---:|:---:|
+| 👕 | Camisa Polo | Roupas | 12 vars | 45 unid | R$ 50 - 60 | [Edit] [Add Var] |
+
+**Ao clicar na linha (Expandir):**
+Uma subtabela se abre logo abaixo, listando as variações.
+
+    ↳ | SKU | Cor | Tamanho | Estoque | Preço | Ações |
+      | CP-VER-M | Vermelho | M | 5 | R$ 50 | [Ajuste Rápido] |
+      | CP-AZU-G | Azul | G | 2 | R$ 60 | [Ajuste Rápido] |
+
+### 3.2. Edição Rápida (Quick Edit)
+Na subtabela de variações, permitir clicar no "Estoque" e editar o número diretamente (inline edit) sem abrir uma nova página, salvando no `onBlur` ou `Enter`. Isso agiliza a correção de inventário.
+
+---
+
+## 4. 🛒 Detalhamento da Tela de PDV
+
+Esta é a tela mais crítica. Deve ser imersiva e impedir distrações.
+
+### 4.1. Layout Dividido (Split Screen)
+- **Painel Esquerdo (60-70%): Área de Busca e Seleção**
+    - **Topo:** Barra de Busca Grande (Foco automático ao abrir). Aceita Nome ou SKU.
+    - **Meio:** Grid ou Lista de Produtos encontrados.
+        - *Card de Produto:* Mostra Nome, Preço e **Badges de Variação** (ao clicar, abre modal rápido pra escolher tamanho/cor se necessário, ou adiciona direto se for produto simples).
+    - **Teclas de Atalho:** F2 (Busca), F9 (Finalizar), Esc (Limpar).
+
+- **Painel Direito (30-40%): O Cupom (Carrinho)**
+    - **Visual:** Similar a um cupom fiscal. Fundo branco/papel.
+    - **Lista de Itens:**
+        - `1x Camisa Polo (Vermelho/M) ... R$ 50,00 [X]`
+    - **Rodapé Fixo:**
+        - Subtotal
+        - Descontos
+        - **TOTAL (Fonte Grande)**
+        - Botão Gigante "FINALIZAR (F9)"
+
+### 4.2. Modal de Pagamento (Split Payment)
+Ao clicar em Finalizar, um Modal sobrepõe a tela (Overlay escuro).
+
+**Estrutura do Modal:**
+1.  **Cabeçalho:** "Total a Pagar: R$ 150,00"
+2.  **Lista de Pagamentos Adicionados:** (Inicialmente vazia).
+3.  **Controles de Adição:**
+    - [ Dropdown: Forma (Pix/Dinheiro/Crédito) ] [ Input: Valor (Auto-preenchido com o restante) ] [ Botão: Adicionar (+) ]
+4.  **Resumo de Restante:**
+    - "Faltam: R$ 50,00" (Vermelho) ou "Troco: R$ 0,00" (Verde).
+5.  **Botão Concluir:**
+    - Desabilitado se "Faltam" > 0.
+    - Habilitado se "Faltam" == 0 (ou troco gerado).
+
+---
+
+## 5. 📅 Ordem de Implementação Sugerida
+
+Para garantir entregas de valor contínuo e testável:
+
+### **Fase 1: Fundação (Dias 1-2)**
+1.  **Componentes Base UI:** Botões, Inputs, Cards (Tailwind + Biblioteca de ícones Phosphor).
+2.  **Layout Shell:** Sidebar e Header funcionais (Roteamento).
+3.  **Hooks Globais:** Estado de Loading e Toastify.
+
+### **Fase 2: Gestão de Inventário (Dias 3-5)**
+4.  **Lista de Produtos:** Implementar Tabela Accordion (Pai/Filho).
+5.  **Formulário de Produto:** Criação de Pai e inserção de variações.
+
+### **Fase 3: O Coração - PDV (Dias 6-8)**
+6.  **Layout PDV:** Construir o Grid (Esquerda) e Carrinho (Direita).
+7.  **Lógica de Carrinho:** Adicionar/Remover itens, cálculo de total local.
+8.  **Modal de Pagamento:** Lógica de Split Payment (banco de memória local antes de integrar back).
+
+### **Fase 4: Conexão (Integração) (Dias 9+)**
+9.  Conectar Telas às APIs reais.
+10. Implementar Widgets de Feedback de Rede.
+
+---
+
+## 6. 🖍️ Wireframes (Baixa Fidelidade)
+
+### 6.1. Tela Principal (App Shell) + Listagem de Produtos
+
+```text
++-----------------------------------------------------------------------+
+| HEADER: [Logo] [Breadcrumb: Produtos]     [ 🟢 Online ]  [User ▾]     |
++-------------+---------------------------------------------------------+
+| [ SIDEBAR ] | [ Container "PageContent"                             ] |
+|             |                                                         |
+|  Dashboard  |  +---------------------------------------------------+  |
+|  PDV        |  | [ Busca... ]            [ + Novo Produto ]        |  |
+| >Produtos   |  +---------------------------------------------------+  |
+|  Relatórios |                                                         |
+|  Config     |  +---------------------------------------------------+  |
+|             |  | PRODUTO       | VARS | ESTOQUE | PREÇO    | ACTIONS |  |
+|             |  | > Camisa Polo | 12   | 45      | R$ 50-60 | [Edit]  |  |
+| [ < ]       |  |   v (Expanded details...)                           |  |
+| (Retrair)   |  |   | SKU: CP01-P | P | 10 un | R$ 50 | [Adjust]    |  |
+|             |  |   | SKU: CP01-M | M | 35 un | R$ 50 | [Adjust]    |  |
+|             |  |                                                     |  |
+|             |  | > Calça Jeans | 2    | 10      | R$ 100   | [Edit]  |  |
+|             |  +---------------------------------------------------+  |
++-------------+---------------------------------------------------------+
+```
+
+### 6.2. Tela de PDV (Full Screen)
+
+```text
++-----------------------------------------------------------------------+
+| HEADER: [Logo]   [ 🟢 Online ]   [User ▾]                             |
++----------------------------------------+------------------------------+
+| PAINEL DE BUSCA & SELEÇÃO (65%)        | PAINEL DO CUPOM (35%)        |
+| (Fundo Cinza Claro)                    | (Fundo Branco - "Papel")     |
+|                                        |                              |
+| +------------------------------------+ |  CUPOM #1234                 |
+| | [ 🔍 Buscar Produto/SKU (F2) ]     | |                              |
+| +------------------------------------+ |  1x Camisa Polo (Azul/M)     |
+|                                        |     R$ 50,00           [x]   |
+| RESULTADOS:                            |                              |
+| +-----------+ +-----------+ +--------+ |  2x Meia Soquete             |
+| | CAMISA P. | | CALÇA J.  | | CINTO  | |     R$ 20,00 (10ea)    [x]   |
+| | R$ 50,00  | | R$ 100,00 | | R$ 30  | |                              |
+| | [P][M][G] | | [38][40]  | | UN     | |  -------------------------   |
+| +-----------+ +-----------+ +--------+ |                              |
+| +-----------+ +-----------+            |  Subtotal:      R$ 90,00     |
+| |           | |           |            |  Desconto:      R$  0,00     |
+| +-----------+ +-----------+            |                              |
+|                                        |  TOTAL:      R$ 90,00        |
+|                                        |                              |
+|                                        | +--------------------------+ |
+|                                        | |    FINALIZAR (F9)        | |
+|                                        | +--------------------------+ |
++----------------------------------------+------------------------------+
+```

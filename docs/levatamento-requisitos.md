@@ -93,20 +93,117 @@
 
 ## 6. 🏗️ Modelagem de Dados
 
-Mantém o ERD original (Produto Pai/Filho, Ordem, Pagamento, Usuário), coerente com PostgreSQL relacional.
+### **Diagrama Entidade-Relacionamento (ERD)**
 
----
+```mermaid
+erDiagram
+    PRODUCT_PARENT ||--|{ PRODUCT_VARIANT : "has"
+    PRODUCT_VARIANT ||--o{ ORDER_ITEM : "is_sold_as"
+    ORDER ||--|{ ORDER_ITEM : "contains"
+    ORDER ||--|{ PAYMENT : "paid_with"
+    USER ||--o{ ORDER : "registers"
+
+    PRODUCT_PARENT {
+        string id PK
+        string name
+        string description
+        string category
+        datetime created_at
+        datetime updated_at
+    }
+
+    PRODUCT_VARIANT {
+        string id PK
+        string parent_id FK
+        string sku "Barcode"
+        string size "P, M, G"
+        string color
+        decimal price
+        int stock_quantity
+        int min_stock_level
+        datetime created_at
+        datetime updated_at
+    }
+
+    ORDER {
+        string id PK
+        datetime date
+        decimal total_amount
+        string status "COMPLETED, CANCELED"
+        string user_id FK
+        datetime created_at
+        datetime updated_at
+    }
+
+    ORDER_ITEM {
+        string id PK
+        string order_id FK
+        string variant_id FK
+        int quantity
+        decimal unit_price
+        datetime created_at
+        datetime updated_at
+    }
+
+    PAYMENT {
+        string id PK
+        string order_id FK
+        string method "CASH, PIX, CREDIT, DEBIT"
+        decimal amount
+        datetime created_at
+        datetime updated_at
+    }
+
+    USER {
+        string id PK
+        string name
+        string email
+        string password
+        string role "ADMIN, STAFF"
+        datetime created_at
+        datetime updated_at
+    }
+```
 
 ## 7. 🔄 Fluxo de Estados (Venda)
 
-Mantém o fluxo original (Iniciar Venda → Seleção → Pagamento → Estoque → Conclusão).
+```mermaid
+stateDiagram-v2
+    [*] --> NewOrder: Iniciar Venda
 
----
+    state NewOrder {
+        [*] --> SelectingItems
+        SelectingItems --> SelectingItems: Adicionar Item
+        SelectingItems --> Payment: Fechar Pedido
+    }
+
+    state Payment {
+        [*] --> AwaitingPayment
+        AwaitingPayment --> AddingPayment: Informar Valor + Método
+        AddingPayment --> AwaitingPayment: Valor Restante > 0
+        AddingPayment --> Paid: Valor Restante == 0
+    }
+
+    Paid --> UpdatingStock: Confirmar Venda
+    UpdatingStock --> Completed: Estoque Abatido
+    Completed --> [*]
+
+    note right of UpdatingStock
+        Sistema reduz quantidade
+        da variação específica
+    end note
+```
 
 ## 8. ✅ Critérios de Aceitação
 
 1. **Venda com Split Payment**: sistema deve calcular corretamente valores restantes.
+   - **Dado que** o total da venda é R$ 100,00
+   - **Quando** o usuário lançar R$ 30,00 em Dinheiro
+   - **Entao** o sistema deve mostrar "Restante: R$ 70,00" e permitir selecionar Cartão para finalizar.
 2. **Estoque Mínimo**: alerta visual quando atingir limite.
+   - **Dado que** a "Camisa Azul P" tem estoque mínimo de 2 unidades e saldo atual de 2
+   - **Quando** uma venda consumir 1 unidade
+   - **Entao** o sistema deve sinalizar visualmente (ex: ícone ou cor) que aquele item está com estoque baixo/crítico.
 3. **Exportação**: exportar `.csv` em até 5s para volumes médios; `.xlsx` assíncrono para grandes volumes.
-
----
+   - **Dado que** o usuário clica em "Exportar Relatório"
+   - **Entao** o download de um arquivo Excel deve iniciar em menos de 5 segundos, contendo todas as vendas do período selecionado.

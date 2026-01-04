@@ -1,0 +1,30 @@
+"use client";
+
+import { useEffect } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import NProgress from "nprogress";
+
+// NProgress styles
+import "nprogress/nprogress.css";
+
+// Configure NProgress
+NProgress.configure({
+  showSpinner: false,
+  minimum: 0.1,
+  speed: 300,
+  trickleSpeed: 200,
+});
+
+export function LoadingBar() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    NProgress.done();
+    return () => {
+      NProgress.start();
+    };
+  }, [pathname, searchParams]);
+
+  return null;
+}
