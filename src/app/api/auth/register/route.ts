@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/lib/validations/user";
 import * as argon2 from "argon2";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
           success: false,
           errors: { email: ["Email já cadastrado"] },
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
           email: user.email,
         },
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("Registration error:", error);
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
         success: false,
         errors: { _form: ["Erro interno do servidor. Tente novamente."] },
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
