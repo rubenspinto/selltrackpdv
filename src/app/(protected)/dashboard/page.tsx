@@ -1,6 +1,5 @@
 "use client";
 
-import { AppShell } from "@/components/layout/AppShell";
 import {
   ChartLineUp,
   Package,
@@ -45,9 +44,8 @@ function StatCard({ title, value, icon: Icon, trend }: StatCardProps) {
 
 export default function DashboardPage() {
   return (
-    <AppShell>
-      <div className="space-y-6">
-        {/* Page Header */}
+    <div className="space-y-6">
+      {/* Page Header */}
         <div>
           <h1 className="text-2xl font-bold text-white">Dashboard</h1>
           <p className="text-gray-400 mt-1">
@@ -85,17 +83,23 @@ export default function DashboardPage() {
               Vendas Recentes
             </h2>
             <div className="space-y-3">
-              {[1, 2, 3, 4, 5].map((i) => (
+              {[
+                { id: 1, price: 125.50, minutes: 10 },
+                { id: 2, price: 89.90, minutes: 20 },
+                { id: 3, price: 210.00, minutes: 30 },
+                { id: 4, price: 45.00, minutes: 40 },
+                { id: 5, price: 320.00, minutes: 50 },
+              ].map((order) => (
                 <div
-                  key={i}
+                  key={order.id}
                   className="flex items-center justify-between py-3 border-b border-gray-800 last:border-0"
                 >
                   <div>
-                    <p className="text-white font-medium">Pedido #{1000 + i}</p>
-                    <p className="text-gray-400 text-sm">Há {i * 10} minutos</p>
+                    <p className="text-white font-medium">Pedido #{1000 + order.id}</p>
+                    <p className="text-gray-400 text-sm">Há {order.minutes} minutos</p>
                   </div>
                   <p className="text-emerald-400 font-semibold">
-                    R$ {(Math.random() * 200 + 50).toFixed(2)}
+                    R$ {order.price.toFixed(2)}
                   </p>
                 </div>
               ))}
@@ -131,6 +135,5 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-    </AppShell>
   );
 }

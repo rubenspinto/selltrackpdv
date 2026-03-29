@@ -1,4 +1,5 @@
 {
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "prisma.pinToPrisma6": true
+  "prisma.pinToPrisma6": true,
+  "css.lint.unknownAtRules": "ignore"
 }

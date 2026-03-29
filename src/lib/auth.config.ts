@@ -1,6 +1,11 @@
-import NextAuth from "next-auth";
 import type { NextAuthConfig } from "next-auth";
 
+/**
+ * Configuração base do NextAuth.
+ * Este arquivo NÃO inicializa o NextAuth — exporta apenas o objeto de configuração.
+ * É compatível com o Edge Runtime (usado pelo Middleware), pois não importa
+ * módulos pesados de Node.js como Prisma ou Argon2.
+ */
 export const authConfig: NextAuthConfig = {
   providers: [],
   session: {
@@ -25,5 +30,3 @@ export const authConfig: NextAuthConfig = {
     },
   },
 };
-
-export const { handlers, signIn, signOut, auth } = NextAuth(authConfig);

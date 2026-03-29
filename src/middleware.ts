@@ -1,17 +1,26 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { auth } from "@/lib/auth.config";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
+
+/**
+ * Instância isolada do NextAuth para uso exclusivo no Middleware (Edge Runtime).
+ * Usa apenas o authConfig (sem Prisma ou Argon2) para ser compatível com o Edge.
+ * A autenticação real (verify de senha, etc.) continua acontecendo em auth.ts.
+ */
+const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const { pathname } = req.nextUrl;
 
-  // Rotas públicas
-  const isPublicRoute = ["/", "/login", "/cadastro"].includes(pathname);
+  // Rotas públicas (se precisar usar no futuro)
+  // const isPublicRoute = ["/", "/login", "/cadastro"].includes(pathname);
 
   // Rotas protegidas
   const isProtectedRoute =
-    pathname.startsWith("/pdv") || pathname.startsWith("/dashboard");
+    pathname.startsWith("/pdv") ||
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/produtos");
 
   // Usuário logado tentando acessar login/cadastro → /pdv
   if (isLoggedIn && (pathname === "/login" || pathname === "/cadastro")) {
@@ -28,6 +37,7 @@ export default auth((req) => {
   return NextResponse.next();
 });
 
+// Configuração para o middleware ser executado em todas as rotas, exceto as estáticas
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

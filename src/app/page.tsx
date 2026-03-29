@@ -1,40 +1,62 @@
-import Link from "next/link";
 import { Storefront } from "@phosphor-icons/react/dist/ssr";
+import { Button } from "@/components/ui/Button";
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
-      <div className="text-center space-y-8 p-8">
-        {/* Ícone */}
+    <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-3xl" />
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 text-center space-y-10 p-8 max-w-lg mx-auto">
+        {/* Icon with glow effect */}
         <div className="flex justify-center">
-          <Storefront className="w-24 h-24 text-emerald-500" weight="duotone" />
+          <div className="relative">
+            <div className="absolute inset-0 bg-emerald-500/20 blur-2xl rounded-full scale-150" />
+            <Storefront
+              className="relative w-28 h-28 text-emerald-500 drop-shadow-2xl"
+              weight="duotone"
+            />
+          </div>
         </div>
 
-        {/* Título */}
-        <h1 className="text-4xl md:text-5xl font-bold text-white">
-          SellTrack PDV
-        </h1>
+        {/* Title with gradient */}
+        <div className="space-y-4">
+          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent">
+            SellTrack PDV
+          </h1>
 
-        {/* Descrição */}
-        <p className="text-gray-400 text-lg max-w-md mx-auto">
+          {/* Decorative line */}
+          <div className="flex items-center justify-center gap-2">
+            <div className="h-px w-12 bg-gradient-to-r from-transparent to-emerald-500" />
+            <div className="w-2 h-2 rounded-full bg-emerald-500" />
+            <div className="h-px w-12 bg-gradient-to-l from-transparent to-emerald-500" />
+          </div>
+        </div>
+
+        {/* Description */}
+        <p className="text-gray-400 text-lg md:text-xl leading-relaxed">
           Sistema completo de ponto de venda para sua loja de roupas
         </p>
 
-        {/* Botões */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            href="/login"
-            className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-colors"
-          >
+        {/* Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+          <Button href="/login" variant="primary">
             Entrar
-          </Link>
-          <Link
-            href="/cadastro"
-            className="px-8 py-3 border-2 border-emerald-600 text-emerald-500 hover:bg-emerald-600 hover:text-white font-semibold rounded-lg transition-colors"
-          >
+          </Button>
+          <Button href="/cadastro" variant="secondary">
             Cadastrar
-          </Link>
+          </Button>
         </div>
+      </div>
+
+      {/* Footer subtle branding */}
+      <div className="absolute bottom-6 text-gray-600 text-sm">
+        © 2026 SellTrack PDV
       </div>
     </main>
   );

@@ -1,6 +1,5 @@
 "use client";
 
-import { AppShell } from "@/components/layout/AppShell";
 import {
   MagnifyingGlass,
   ShoppingCart,
@@ -57,13 +56,18 @@ export default function PdvPage() {
     setCart((prev) => prev.filter((item) => item.id !== id));
   };
 
-  // Gera número do cupom apenas no cliente para evitar erro de hidratação
+  // Gera número do cupom ao renderizar no client (ou inicializa fixo para SSR)
   useEffect(() => {
-    setCupomNumber(Math.floor(Math.random() * 9000) + 1000);
+    // Usando setTimeout para evitar atualização síncrona dentro do body do effect,
+    // prevenindo "cascading renders" e resolvendo o warning do ESLint
+    const timer = setTimeout(() => {
+      setCupomNumber(Math.floor(Math.random() * 9000) + 1000);
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
-    <AppShell showSidebar={false} showBreadcrumb={false} containerType="full">
+    <>
       <div className="h-[calc(100vh-60px)] flex">
         {/* Left Panel - Search & Products */}
         <div className="flex-1 lg:w-[65%] bg-gray-900 p-4 flex flex-col">
@@ -234,6 +238,6 @@ export default function PdvPage() {
           </div>
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }

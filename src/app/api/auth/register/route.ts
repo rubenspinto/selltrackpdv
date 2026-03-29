@@ -4,6 +4,22 @@ import * as argon2 from "argon2";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
+  // 1. Verificar origem em produção
+  const origin = request.headers.get("origin");
+  const host = request.headers.get("host");
+
+  // 1.1 Verificar se a origem é válida
+  if (
+    process.env.NODE_ENV === "production" &&
+    origin !== `https://${host}` &&
+    origin !== `http://${host}`
+  ) {
+    return NextResponse.json(
+      { success: false, errors: { _form: ["Requisição inválida"] } },
+      { status: 403 },
+    );
+  }
+
   try {
     const body = await request.json();
 

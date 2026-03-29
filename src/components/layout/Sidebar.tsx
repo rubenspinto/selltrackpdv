@@ -44,7 +44,7 @@ export function Sidebar({
     // Persist sidebar state in localStorage
     const saved = localStorage.getItem("sidebar-collapsed");
     if (saved !== null) {
-      setIsCollapsed(JSON.parse(saved));
+      setTimeout(() => setIsCollapsed(JSON.parse(saved)), 0);
     }
   }, []);
 
